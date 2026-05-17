@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+classic=(code-analyzer data-processing jargon metrics network-activity system-monitoring)
+modern=(agent-workflows platform-engineering observability-ai-runtime delivery-preview-ops supply-chain-security)
+fallback=(ai-inference-ops evaluation-and-guardrails knowledge-retrieval edge-client-runtime identity-and-trust aibom-provenance agent-boundary-security embedded-agentic-pipeline data-governance-compliance finops-capacity blockchain-protocol-ops cross-chain-interop proof-and-sequencer-ops hybrid-runtime-ops capacity-cost-controller batch-execution-tuner compiler-maintainer interop-adapter-engineer preflight-capacity-planner simulator-performance-engineer fhir-profile-generator smart-launch-oauth bulk-fhir-population-ops hl7v2-feed-ops clinical-workflow-events dicomweb-imaging-ops openehr-semantic-record-ops device-telemetry-clinical emr-vendor-adapter ocpp-chargepoint-ops ocpi-roaming-ops mcp-a2a-ops streaming-bus-ops service-mesh-rpc-ops)
+all_families=("${classic[@]}" "${modern[@]}" "${fallback[@]}")
+
+output_format=text
+focus_family=
+seed=42
+list_values=0
+
+usage='bash-stakeholder [--list-values] [--focus-family FAMILY] [--output-format text|json] [--seed N] [--experimental-provider PROVIDER]'
+
+fail() {
+	printf '%s\n' "$1" >&2
+	exit "${2:-2}"
+}
+
+need_value() {
+	local flag=$1
+	local value=${2-}
+	[[ -n $value && $value != --* ]] || fail "missing value for $flag"
+	printf '%s' "$value"
+}
+
+normalize_family() {
+	printf '%s' "${1//_/-}"
+}
+
+family_key() {
+	printf '%s' "${1//-/_}"
+}
+
+contains_family() {
+	local needle=$1 item
+	for item in "${all_families[@]}"; do
+		[[ $item == "$needle" ]] && return 0
+	done
+	return 1
+}
+
+parity_class() {
+	local family=$1 item
+	for item in "${classic[@]}"; do [[ $item == "$family" ]] && {
+		printf 'classic-six'
+		return
+	}; done
+	for item in "${modern[@]}"; do [[ $item == "$family" ]] && {
+		printf 'modern-core'
+		return
+	}; done
+	for item in "${fallback[@]}"; do [[ $item == "$family" ]] && {
+		printf 'grouped-fallback'
+		return
+	}; done
+	printf 'unknown'
+}
+
+message_for() {
+	case "$1" in
+	code-analyzer) printf 'scanning source modules for reviewable complexity and dependency movement' ;;
+	data-processing) printf 'batching records through deterministic transforms and stable output ordering' ;;
+	jargon) printf 'keeping technical language current without drifting into fake-deep jargon' ;;
+	metrics) printf 'tracking queue depth latency bands and cost signals across the active workload' ;;
+	network-activity) printf 'observing RPC event-stream and adapter traffic across the current service boundary' ;;
+	system-monitoring) printf 'watching collector pressure runner health and process saturation on the active stack' ;;
+	agent-workflows) printf 'routing coding-agent work through review queues and approval gates' ;;
+	platform-engineering) printf 'maintaining golden paths service templates and workload identity' ;;
+	observability-ai-runtime) printf 'recording traces token spend and latency bands for the active runtime' ;;
+	delivery-preview-ops) printf 'managing preview environments feature flags and canary promotions' ;;
+	supply-chain-security) printf 'checking artifact trust secret exposure and dependency health before release' ;;
+	*) printf 'holding later-family behavior behind an explicit grouped fallback' ;;
+	esac
+}
+
+emit_list_values() {
+	printf '{"language":"bash","renderer":"bash-stakeholder","families":['
+	local first=1 item
+	for item in "${all_families[@]}"; do
+		[[ $first -eq 1 ]] || printf ','
+		first=0
+		printf '"%s"' "$item"
+	done
+	printf ']}\n'
+}
+
+emit_json() {
+	local family=$1
+	printf '{"language":"bash","renderer":"bash-stakeholder","seed":%s,"events":[{"family":"%s","familyKey":"%s","parityClass":"%s","sequence":1,"timestamp":"T+000137ms","message":"%s","metadata":{"schemaVersion":"2026-04","contract":"classic-six-plus-modern-core"}}]}\n' \
+		"$seed" "$family" "$(family_key "$family")" "$(parity_class "$family")" "$(message_for "$family")"
+}
+
+emit_text() {
+	local family=$1
+	printf 'bash-stakeholder seed=%s family=%s parity=%s\n' "$seed" "$family" "$(parity_class "$family")"
+	printf '%s\n' "$(message_for "$family")"
+}
+
+while (($#)); do
+	case "$1" in
+	--list-values)
+		list_values=1
+		shift
+		;;
+	--focus-family)
+		focus_family=$(normalize_family "$(need_value "$1" "${2-}")")
+		shift 2
+		;;
+	--output-format)
+		output_format=$(need_value "$1" "${2-}")
+		[[ $output_format == text || $output_format == json ]] || fail "unsupported --output-format: $output_format"
+		shift 2
+		;;
+	--seed)
+		seed=$(need_value "$1" "${2-}")
+		[[ $seed =~ ^-?[0-9]+$ ]] || seed=42
+		shift 2
+		;;
+	--experimental-provider)
+		provider=$(need_value "$1" "${2-}")
+		fail "bash-stakeholder: experimental provider '$provider' is not implemented in Tranche D; gap=bash.experimental-provider-fail-fast"
+		;;
+	--experimental-*) fail 'experimental flags require --experimental-provider. gap=bash.experimental-provider-fail-fast' ;;
+	--project | -p | --dev-type | -d | --jargon | -j | --complexity | -c | --framework | -F | --duration | -T)
+		need_value "$1" "${2-}" >/dev/null
+		shift 2
+		;;
+	--alerts | -a | --team | -t | --trace | --minimal | --no-color) shift ;;
+	--help | -h)
+		printf '%s\n' "$usage"
+		exit 0
+		;;
+	*) fail "unknown argument: $1" ;;
+	esac
+done
+
+if [[ $list_values -eq 1 ]]; then
+	emit_list_values
+	exit 0
+fi
+
+if [[ -z $focus_family ]]; then
+	focus_family=${classic[$((seed < 0 ? -seed : seed)) % ${#classic[@]}]}
+fi
+contains_family "$focus_family" || fail "unsupported --focus-family: $focus_family"
+
+if [[ $output_format == json ]]; then
+	emit_json "$focus_family"
+else
+	emit_text "$focus_family"
+fi

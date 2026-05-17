@@ -1,15 +1,15 @@
 name: ci-native
-
 on:
-  push:
   pull_request:
-
+  push:
+    branches: [main]
 jobs:
-  scaffold-check:
+  ci-native:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
+      - uses: actions/checkout@v5
+      - run: sudo apt-get update && sudo apt-get install -y shellcheck shfmt
       - run: python3 scripts/validate_scaffold.py
+      - run: shfmt -d bin/stakeholder tests/test_cli.sh
+      - run: shellcheck bin/stakeholder tests/test_cli.sh
+      - run: tests/test_cli.sh bin/stakeholder
