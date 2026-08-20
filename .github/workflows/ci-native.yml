@@ -6,8 +6,13 @@ on:
 jobs:
   ci-native:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - run: sudo apt-get update && sudo apt-get install -y shellcheck shfmt
       - run: python3 scripts/validate_scaffold.py
       - run: shfmt -d bin/stakeholder tests/test_cli.sh
