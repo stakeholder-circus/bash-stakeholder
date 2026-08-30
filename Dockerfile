@@ -1,4 +1,4 @@
-FROM alpine:3.22
+FROM alpine:3.24
 RUN apk add --no-cache bash shellcheck
 WORKDIR /app
 LABEL org.opencontainers.image.title="bash-stakeholder"
